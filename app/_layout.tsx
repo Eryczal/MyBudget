@@ -51,6 +51,7 @@ function RootLayoutNav() {
         <PaperProvider theme={theme}>
             <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="add" options={{ headerShown: true, title: "Dodaj" }} />
             </Stack>
         </PaperProvider>
     );
