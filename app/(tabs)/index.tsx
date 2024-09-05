@@ -57,20 +57,6 @@ export default function MainScreen() {
                     </View>
                     <ProgressBar progress={0.1} color="#d9c222" style={styles.bar} />
                 </Card>
-                <Card mode="elevated" style={styles.goal}>
-                    <View style={styles.goalContainer}>
-                        <View style={styles.goalView}>
-                            <Icon source="piggy-bank-outline" size={26} />
-                            <Text variant="bodyLarge" style={styles.goalName}>
-                                Rower
-                            </Text>
-                        </View>
-                        <View>
-                            <Text variant="bodyLarge">1500zł / 3000zł</Text>
-                        </View>
-                    </View>
-                    <ProgressBar progress={0.5} color="#d9c222" style={styles.bar} />
-                </Card>
             </Card>
             <StatusBar style={"dark"} />
         </View>

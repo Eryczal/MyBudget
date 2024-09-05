@@ -1,7 +1,8 @@
 import { View } from "@/components/Themed";
+import { useTransactions } from "@/components/TransactionContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Dimensions, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, TouchableWithoutFeedback } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 
 import { Card, FAB, Icon, Text } from "react-native-paper";
@@ -70,88 +71,71 @@ const chartConfig = {
 
 export default function BudgetScreen() {
     const router = useRouter();
+    const { transactions } = useTransactions();
     const [fromZero, setFromZero] = useState<boolean>(true);
 
     const changeChart = () => {
         setFromZero(!fromZero);
     };
 
+    if (!transactions) {
+        return <></>;
+    }
+
     return (
         <View style={styles.container}>
-            <Text variant="headlineMedium" style={styles.header}>
-                Sierpień 2024
-            </Text>
-            <TouchableWithoutFeedback onPress={changeChart}>
-                <View>
-                    <LineChart
-                        data={chartData}
-                        verticalLabelRotation={-70}
-                        width={window.width * 0.94}
-                        height={220}
-                        chartConfig={chartConfig}
-                        yAxisSuffix="zł"
-                        fromZero={fromZero}
-                        style={styles.chart}
-                    />
-                </View>
-            </TouchableWithoutFeedback>
-            <View>
-                <Text variant="headlineLarge" style={styles.header}>
-                    Ostatnie zmiany
+            <ScrollView>
+                <Text variant="headlineMedium" style={styles.header}>
+                    Sierpień 2024
                 </Text>
-                <Card mode="elevated" style={styles.payment}>
-                    <View style={styles.paymentContainer}>
-                        <View style={styles.paymentView}>
-                            <Icon source="piggy-bank-outline" size={26} />
-                            <Text variant="bodyLarge" style={styles.paymentName}>
-                                Rower
-                            </Text>
-                        </View>
-                        <View>
-                            <Text variant="bodyLarge">30zł</Text>
-                        </View>
+                <TouchableWithoutFeedback onPress={changeChart}>
+                    <View>
+                        <LineChart
+                            data={chartData}
+                            verticalLabelRotation={-70}
+                            width={window.width * 0.94}
+                            height={220}
+                            chartConfig={chartConfig}
+                            yAxisSuffix="zł"
+                            fromZero={fromZero}
+                            style={styles.chart}
+                        />
                     </View>
-                </Card>
-                <Card mode="elevated" style={styles.payment}>
-                    <View style={styles.paymentContainer}>
-                        <View style={styles.paymentView}>
-                            <Icon source="piggy-bank-outline" size={26} />
-                            <Text variant="bodyLarge" style={styles.paymentName}>
-                                Rower
-                            </Text>
+                </TouchableWithoutFeedback>
+                <View>
+                    <Text variant="headlineLarge" style={styles.header}>
+                        Ostatnie zmiany
+                    </Text>
+                    {/* <Card mode="elevated" style={styles.payment}>
+                        <View style={styles.paymentContainer}>
+                            <View style={styles.paymentView}>
+                                <Icon source="piggy-bank-outline" size={26} />
+                                <Text variant="bodyLarge" style={styles.paymentName}>
+                                    Rower
+                                </Text>
+                            </View>
+                            <View>
+                                <Text variant="bodyLarge">30zł</Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text variant="bodyLarge">30zł</Text>
-                        </View>
-                    </View>
-                </Card>
-                <Card mode="elevated" style={styles.payment}>
-                    <View style={styles.paymentContainer}>
-                        <View style={styles.paymentView}>
-                            <Icon source="piggy-bank-outline" size={26} />
-                            <Text variant="bodyLarge" style={styles.paymentName}>
-                                Rower
-                            </Text>
-                        </View>
-                        <View>
-                            <Text variant="bodyLarge">30zł</Text>
-                        </View>
-                    </View>
-                </Card>
-                <Card mode="elevated" style={styles.payment}>
-                    <View style={styles.paymentContainer}>
-                        <View style={styles.paymentView}>
-                            <Icon source="piggy-bank-outline" size={26} />
-                            <Text variant="bodyLarge" style={styles.paymentName}>
-                                Rower
-                            </Text>
-                        </View>
-                        <View>
-                            <Text variant="bodyLarge">30zł</Text>
-                        </View>
-                    </View>
-                </Card>
-            </View>
+                    </Card> */}
+                    {transactions.map((transaction: any) => (
+                        <Card key={transaction.id} mode="elevated" style={styles.payment}>
+                            <View style={styles.paymentContainer}>
+                                <View style={styles.paymentView}>
+                                    <Icon source="piggy-bank-outline" size={26} />
+                                    <Text variant="bodyLarge" style={styles.paymentName}>
+                                        {transaction.name} {console.log(transaction.id)}
+                                    </Text>
+                                </View>
+                                <View>
+                                    <Text variant="bodyLarge">{transaction.cost}zł</Text>
+                                </View>
+                            </View>
+                        </Card>
+                    ))}
+                </View>
+            </ScrollView>
             <FAB icon="plus" style={styles.fab} color="#fff" onPress={() => router.push("/add")} />
         </View>
     );
