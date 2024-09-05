@@ -2,9 +2,13 @@ import { createContext, ReactNode, useContext, useEffect, useState } from "react
 import * as SQLite from "expo-sqlite";
 
 interface TransactionContextProps {
-    transactions: Transaction[];
+    transactions: TransactionList | null;
     addTransaction: any;
 }
+
+type TransactionList = {
+    [key: string]: Transaction[];
+};
 
 type Transaction = {
     id: number;
@@ -27,7 +31,7 @@ export const useTransactions = () => {
 };
 
 export const TransactionProvider = ({ children }: { children: ReactNode }) => {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [transactions, setTransactions] = useState<TransactionList | null>(null);
     const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
 
     useEffect(() => {
@@ -74,12 +78,20 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
         const dbTransactions: Transaction[] = loadTransactions as Transaction[];
 
-        setTransactions(dbTransactions);
+        const groupedTransactions = dbTransactions.reduce((groups: TransactionList, transaction) => {
+            const transactionDate = transaction.date;
+            if (!groups[transactionDate]) {
+                groups[transactionDate] = [];
+            }
+            groups[transactionDate].push(transaction);
+            return groups;
+        }, {});
+
+        setTransactions(groupedTransactions);
     };
 
     const addTransaction = (transaction: Transaction) => {
         databaseAdd(transaction);
-        setTransactions((prev: any) => [...prev, transaction]);
     };
 
     const value: TransactionContextProps = {

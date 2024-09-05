@@ -106,33 +106,27 @@ export default function BudgetScreen() {
                     <Text variant="headlineLarge" style={styles.header}>
                         Ostatnie zmiany
                     </Text>
-                    {/* <Card mode="elevated" style={styles.payment}>
-                        <View style={styles.paymentContainer}>
-                            <View style={styles.paymentView}>
-                                <Icon source="piggy-bank-outline" size={26} />
-                                <Text variant="bodyLarge" style={styles.paymentName}>
-                                    Rower
-                                </Text>
-                            </View>
-                            <View>
-                                <Text variant="bodyLarge">30zł</Text>
-                            </View>
+                    {Object.keys(transactions).map((date: string) => (
+                        <View key={date}>
+                            <Text variant="titleLarge" style={styles.date}>
+                                {date}
+                            </Text>
+                            {transactions[date].map((transaction: any) => (
+                                <Card key={transaction.id} mode="elevated" style={styles.payment}>
+                                    <View style={styles.paymentContainer}>
+                                        <View style={styles.paymentView}>
+                                            <Icon source="piggy-bank-outline" size={26} />
+                                            <Text variant="bodyLarge" style={styles.paymentName}>
+                                                {transaction.name}
+                                            </Text>
+                                        </View>
+                                        <View>
+                                            <Text variant="bodyLarge">{transaction.cost}zł</Text>
+                                        </View>
+                                    </View>
+                                </Card>
+                            ))}
                         </View>
-                    </Card> */}
-                    {transactions.map((transaction: any) => (
-                        <Card key={transaction.id} mode="elevated" style={styles.payment}>
-                            <View style={styles.paymentContainer}>
-                                <View style={styles.paymentView}>
-                                    <Icon source="piggy-bank-outline" size={26} />
-                                    <Text variant="bodyLarge" style={styles.paymentName}>
-                                        {transaction.name} {console.log(transaction.id)}
-                                    </Text>
-                                </View>
-                                <View>
-                                    <Text variant="bodyLarge">{transaction.cost}zł</Text>
-                                </View>
-                            </View>
-                        </Card>
                     ))}
                 </View>
             </ScrollView>
@@ -152,6 +146,9 @@ const styles = StyleSheet.create({
     },
     chart: {
         borderRadius: 16,
+        alignSelf: "center",
+    },
+    date: {
         alignSelf: "center",
     },
     payment: {
