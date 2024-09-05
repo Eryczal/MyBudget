@@ -78,6 +78,16 @@ export default function BudgetScreen() {
         setFromZero(!fromZero);
     };
 
+    const displayDate = (stringDate: string) => {
+        const date = new Date(stringDate);
+
+        return date.toLocaleDateString("pl-PL", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+        });
+    };
+
     if (!transactions) {
         return <></>;
     }
@@ -102,14 +112,11 @@ export default function BudgetScreen() {
                         />
                     </View>
                 </TouchableWithoutFeedback>
-                <View>
-                    <Text variant="headlineLarge" style={styles.header}>
-                        Ostatnie zmiany
-                    </Text>
+                <View style={styles.margin}>
                     {Object.keys(transactions).map((date: string) => (
                         <View key={date}>
-                            <Text variant="titleLarge" style={styles.date}>
-                                {date}
+                            <Text variant="titleMedium" style={styles.date}>
+                                {displayDate(date)}
                             </Text>
                             {transactions[date].map((transaction: any) => (
                                 <Card key={transaction.id} mode="elevated" style={styles.payment}>
@@ -148,8 +155,13 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         alignSelf: "center",
     },
+    margin: {
+        marginBottom: 70,
+    },
     date: {
         alignSelf: "center",
+        marginTop: 22,
+        marginBottom: 4,
     },
     payment: {
         padding: 12,
