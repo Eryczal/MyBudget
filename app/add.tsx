@@ -69,7 +69,7 @@ export default function AddScreen() {
                 const transaction = {
                     date,
                     name,
-                    cost: cost.replace(/,/g, "."),
+                    cost: parseFloat(cost.replace(/,/g, ".")),
                     desc,
                 };
 

@@ -1,8 +1,8 @@
 import { View } from "@/components/Themed";
 import { useTransactions } from "@/components/TransactionContext";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Dimensions, PanResponder, ScrollView, StyleSheet, TouchableWithoutFeedback } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 
 import { Card, FAB, Icon, Text } from "react-native-paper";
@@ -71,20 +71,66 @@ const chartConfig = {
 
 export default function BudgetScreen() {
     const router = useRouter();
-    const { transactions } = useTransactions();
+    const { transactions, loadTransactions } = useTransactions();
     const [fromZero, setFromZero] = useState<boolean>(true);
+    const [date, setDate] = useState<Date>(new Date());
+    const swiped = useRef(new Animated.Value(0)).current;
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderMove: Animated.event([null, { dx: swiped }], { useNativeDriver: false }),
+            onPanResponderRelease: (evt, gestureState) => {
+                if (Math.abs(gestureState.dx) > window.width * 0.6) {
+                    const direction = gestureState.dx > 0 ? -1 : 1;
+
+                    Animated.spring(swiped, {
+                        toValue: window.width * direction * -1,
+                        useNativeDriver: false,
+                    }).start();
+
+                    setTimeout(() => {
+                        setDate((prev) => {
+                            const newDate = new Date(prev);
+                            newDate.setMonth(prev.getMonth() + direction);
+                            return newDate;
+                        });
+                    }, 150);
+                } else {
+                    Animated.spring(swiped, {
+                        toValue: 0,
+                        useNativeDriver: false,
+                    }).start();
+                }
+            },
+        })
+    ).current;
+
+    useEffect(() => {
+        loadTransactions(date);
+    }, [date]);
+
+    useEffect(() => {
+        setTimeout(() => {
+            Animated.spring(swiped, {
+                toValue: 0,
+                useNativeDriver: false,
+            }).start();
+        }, 50);
+    }, [transactions]);
 
     const changeChart = () => {
         setFromZero(!fromZero);
     };
 
-    const displayDate = (stringDate: string) => {
-        const date = new Date(stringDate);
+    const displayDate = (stringDate: string | Date, header: boolean = false) => {
+        const dateObj: Date = stringDate instanceof Date ? stringDate : new Date(stringDate);
 
-        return date.toLocaleDateString("pl-PL", {
-            day: "2-digit",
+        return dateObj.toLocaleDateString("pl-PL", {
             month: "long",
             year: "numeric",
+            ...(!header && { day: "2-digit" }),
         });
     };
 
@@ -94,49 +140,57 @@ export default function BudgetScreen() {
 
     return (
         <View style={styles.container}>
-            <ScrollView>
-                <Text variant="headlineMedium" style={styles.header}>
-                    Sierpień 2024
-                </Text>
-                <TouchableWithoutFeedback onPress={changeChart}>
-                    <View>
-                        <LineChart
-                            data={chartData}
-                            verticalLabelRotation={-70}
-                            width={window.width * 0.94}
-                            height={220}
-                            chartConfig={chartConfig}
-                            yAxisSuffix="zł"
-                            fromZero={fromZero}
-                            style={styles.chart}
-                        />
-                    </View>
-                </TouchableWithoutFeedback>
-                <View style={styles.margin}>
-                    {Object.keys(transactions).map((date: string) => (
-                        <View key={date}>
-                            <Text variant="titleMedium" style={styles.date}>
-                                {displayDate(date)}
-                            </Text>
-                            {transactions[date].map((transaction: any) => (
-                                <Card key={transaction.id} mode="elevated" style={styles.payment}>
-                                    <View style={styles.paymentContainer}>
-                                        <View style={styles.paymentView}>
-                                            <Icon source="piggy-bank-outline" size={26} />
-                                            <Text variant="bodyLarge" style={styles.paymentName}>
-                                                {transaction.name}
-                                            </Text>
-                                        </View>
-                                        <View>
-                                            <Text variant="bodyLarge">{transaction.cost}zł</Text>
-                                        </View>
-                                    </View>
-                                </Card>
-                            ))}
+            <Animated.View {...panResponder.panHandlers} style={{ flex: 1, transform: [{ translateX: swiped }] }}>
+                <ScrollView>
+                    <Text variant="headlineMedium" style={styles.header}>
+                        {displayDate(date, true)}
+                    </Text>
+                    <TouchableWithoutFeedback onPress={changeChart}>
+                        <View>
+                            <LineChart
+                                data={chartData}
+                                verticalLabelRotation={-70}
+                                width={window.width * 0.94}
+                                height={220}
+                                chartConfig={chartConfig}
+                                yAxisSuffix="zł"
+                                fromZero={fromZero}
+                                style={styles.chart}
+                            />
                         </View>
-                    ))}
-                </View>
-            </ScrollView>
+                    </TouchableWithoutFeedback>
+                    <View style={styles.margin}>
+                        {Object.keys(transactions).length === 0 ? (
+                            <Text variant="titleMedium" style={styles.date}>
+                                Brak zmian
+                            </Text>
+                        ) : (
+                            Object.keys(transactions).map((date: string) => (
+                                <View key={date}>
+                                    <Text variant="titleMedium" style={styles.date}>
+                                        {displayDate(date)}
+                                    </Text>
+                                    {transactions[date].map((transaction: any) => (
+                                        <Card key={transaction.id} mode="elevated" style={styles.payment}>
+                                            <View style={styles.paymentContainer}>
+                                                <View style={styles.paymentView}>
+                                                    <Icon source="piggy-bank-outline" size={26} />
+                                                    <Text variant="bodyLarge" style={styles.paymentName}>
+                                                        {transaction.name}
+                                                    </Text>
+                                                </View>
+                                                <View>
+                                                    <Text variant="bodyLarge">{transaction.cost}zł</Text>
+                                                </View>
+                                            </View>
+                                        </Card>
+                                    ))}
+                                </View>
+                            ))
+                        )}
+                    </View>
+                </ScrollView>
+            </Animated.View>
             <FAB icon="plus" style={styles.fab} color="#fff" onPress={() => router.push("/add")} />
         </View>
     );
@@ -150,6 +204,7 @@ const styles = StyleSheet.create({
     header: {
         margin: 20,
         textAlign: "center",
+        textTransform: "capitalize",
     },
     chart: {
         borderRadius: 16,

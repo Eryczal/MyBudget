@@ -3,7 +3,8 @@ import * as SQLite from "expo-sqlite";
 
 interface TransactionContextProps {
     transactions: TransactionList | null;
-    addTransaction: any;
+    addTransaction: (transaction: Transaction) => void;
+    loadTransactions: (date: Date) => void;
 }
 
 type TransactionList = {
@@ -11,7 +12,7 @@ type TransactionList = {
 };
 
 type Transaction = {
-    id: number;
+    id?: number;
     date: string;
     name: string;
     cost: number;
@@ -70,13 +71,13 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
         const date = `${year}-${month}-01`;
 
-        const loadTransactions: unknown[] = await database.getAllAsync(
+        const loadedTransactions: unknown[] = await database.getAllAsync(
             "SELECT * FROM transactions WHERE date BETWEEN strftime('%Y-%m-01', ?) AND strftime('%Y-%m-%d', ?, 'start of month', '+1 month', '-1 day')",
             date,
             date
         );
 
-        const dbTransactions: Transaction[] = loadTransactions as Transaction[];
+        const dbTransactions: Transaction[] = loadedTransactions as Transaction[];
 
         const groupedTransactions = dbTransactions.reduce((groups: TransactionList, transaction) => {
             const transactionDate = transaction.date;
@@ -90,6 +91,15 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         setTransactions(groupedTransactions);
     };
 
+    const loadTransactions = async (date: Date) => {
+        if (db) {
+            const year = date.getFullYear().toString();
+            const month = (date.getMonth() + 1).toString().padStart(2, "0");
+
+            databaseSelect(db, year, month);
+        }
+    };
+
     const addTransaction = (transaction: Transaction) => {
         databaseAdd(transaction);
     };
@@ -97,6 +107,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     const value: TransactionContextProps = {
         transactions,
         addTransaction,
+        loadTransactions,
     };
 
     return <TransactionContext.Provider value={value}>{children}</TransactionContext.Provider>;
