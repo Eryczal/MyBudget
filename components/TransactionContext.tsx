@@ -60,6 +60,10 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         loadDatabase();
     }, []);
 
+    // useEffect(() => {
+    //     databaseClear();
+    // }, [db]);
+
     const databaseAdd = async (transaction: Transaction) => {
         if (!db) {
             return;
@@ -139,6 +143,18 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
     const addTransaction = (transaction: Transaction) => {
         databaseAdd(transaction);
+    };
+
+    const databaseClear = () => {
+        if (db) {
+            db.execAsync(`
+                DROP TABLE IF EXISTS transactions;
+                DROP TABLE IF EXISTS months;
+            `);
+
+            setTransactions(null);
+            setMonthData(null);
+        }
     };
 
     const value: TransactionContextProps = {
