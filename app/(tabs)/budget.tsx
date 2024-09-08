@@ -71,23 +71,30 @@ const chartConfig = {
 
 export default function BudgetScreen() {
     const router = useRouter();
-    const { transactions, loadTransactions } = useTransactions();
+    const { transactions, monthData, loadTransactions } = useTransactions();
     const [fromZero, setFromZero] = useState<boolean>(true);
     const [date, setDate] = useState<Date>(new Date());
     const swiped = useRef(new Animated.Value(0)).current;
 
     const panResponder = useRef(
         PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderMove: Animated.event([null, { dx: swiped }], { useNativeDriver: false }),
+            onMoveShouldSetPanResponder: (evt, { dx, dy, moveX, moveY }) => {
+                return Math.abs(dx) > window.width * 0.01;
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                const swipeThreshold = window.width * 0.1;
+                const direction = gestureState.dx > 0 ? 1 : -1;
+                if (Math.abs(gestureState.dx) >= swipeThreshold) {
+                    swiped.setValue(gestureState.dx - swipeThreshold * direction);
+                }
+            },
             onPanResponderRelease: (evt, gestureState) => {
-                if (Math.abs(gestureState.dx) > window.width * 0.6) {
+                if (Math.abs(gestureState.dx) > window.width * 0.3) {
                     const direction = gestureState.dx > 0 ? -1 : 1;
 
                     Animated.spring(swiped, {
                         toValue: window.width * direction * -1,
-                        useNativeDriver: false,
+                        useNativeDriver: true,
                     }).start();
 
                     setTimeout(() => {
@@ -96,11 +103,17 @@ export default function BudgetScreen() {
                             newDate.setMonth(prev.getMonth() + direction);
                             return newDate;
                         });
+
+                        Animated.timing(swiped, {
+                            toValue: window.width * direction,
+                            useNativeDriver: true,
+                            duration: 0,
+                        }).start();
                     }, 150);
                 } else {
                     Animated.spring(swiped, {
                         toValue: 0,
-                        useNativeDriver: false,
+                        useNativeDriver: true,
                     }).start();
                 }
             },
@@ -115,7 +128,7 @@ export default function BudgetScreen() {
         setTimeout(() => {
             Animated.spring(swiped, {
                 toValue: 0,
-                useNativeDriver: false,
+                useNativeDriver: true,
             }).start();
         }, 50);
     }, [transactions]);
