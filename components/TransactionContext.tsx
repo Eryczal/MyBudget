@@ -3,6 +3,7 @@ import * as SQLite from "expo-sqlite";
 
 interface TransactionContextProps {
     transactions: TransactionList | null;
+    monthData: MonthData | null;
     addTransaction: (transaction: Transaction) => void;
     loadTransactions: (date: Date) => void;
 }
@@ -19,6 +20,12 @@ type Transaction = {
     desc?: string;
 };
 
+type MonthData = {
+    id?: number;
+    date: string;
+    balance: number;
+};
+
 const TransactionContext = createContext<TransactionContextProps | null>(null);
 
 export const useTransactions = () => {
@@ -33,6 +40,7 @@ export const useTransactions = () => {
 
 export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     const [transactions, setTransactions] = useState<TransactionList | null>(null);
+    const [monthData, setMonthData] = useState<MonthData | null>(null);
     const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
 
     useEffect(() => {
@@ -43,6 +51,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
             await database.execAsync(`
                 CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY NOT NULL, date TEXT NOT NULL, name TEXT NOT NULL, cost REAL NOT NULL, desc TEXT);
+                CREATE TABLE IF NOT EXISTS months (id INTEGER PRIMARY KEY NOT NULL, date TEXT NOT NULL, balance REAL NOT NULL);
             `);
 
             databaseSelect(database);
@@ -57,7 +66,31 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const { date, name, cost, desc } = transaction;
-        await db.runAsync("INSERT INTO transactions (date, name, cost, desc) VALUES (?, ?, ?, ?)", date, name, cost, desc ?? "");
+        const monthDate = date.split("-").slice(0, 2).join("-");
+
+        await db.withTransactionAsync(async () => {
+            await db.runAsync("INSERT INTO transactions (date, name, cost, desc) VALUES (?, ?, ?, ?)", date, name, cost, desc ?? "");
+
+            const result: any = await db.getFirstAsync("SELECT balance FROM months WHERE date = ?", monthDate);
+
+            if (result === null) {
+                const previousResult: any = await db.getFirstAsync("SELECT * FROM months WHERE date < ? ORDER BY date DESC");
+
+                if (previousResult !== null) {
+                    const lastMonth = previousResult.rows[0];
+
+                    const sum: any = await db.getFirstAsync(
+                        "SELECT SUM(cost) as total FROM transactions WHERE date BETWEEN strftime('%Y-%m-01', ?) AND strftime('%Y-%m-%d', ?, 'start of month', '+1 month', '-1 day')"
+                    );
+
+                    await db.runAsync("INSERT INTO months (date, balance) VALUES (?, ?)", monthDate, lastMonth["balance"] + sum.rows[0]["total"]);
+                } else {
+                    await db.runAsync("INSERT INTO months (date, balance) VALUES (?, 0)", monthDate);
+                }
+            }
+
+            await db.runAsync("UPDATE months SET balance = balance + ? WHERE date > ?", cost, monthDate);
+        });
         databaseSelect(db);
     };
 
@@ -88,7 +121,11 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
             return groups;
         }, {});
 
+        const loadedMonth: any = await database.getAllAsync("SELECT * FROM months WHERE date = ?", `${year}-${month}`);
+        const monthValue = loadedMonth[0] ? loadedMonth[0] : { date: "${year}-${month}", balance: 0 };
+
         setTransactions(groupedTransactions);
+        setMonthData(monthValue);
     };
 
     const loadTransactions = async (date: Date) => {
@@ -106,6 +143,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
     const value: TransactionContextProps = {
         transactions,
+        monthData,
         addTransaction,
         loadTransactions,
     };
