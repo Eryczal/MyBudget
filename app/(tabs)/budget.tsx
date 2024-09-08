@@ -9,49 +9,6 @@ import { Card, FAB, Icon, Text } from "react-native-paper";
 
 const window = Dimensions.get("window");
 
-const chartData = {
-    labels: [
-        "01",
-        "",
-        "03",
-        "",
-        "05",
-        "",
-        "07",
-        "",
-        "09",
-        "",
-        "11",
-        "",
-        "13",
-        "",
-        "15",
-        "",
-        "17",
-        "",
-        "19",
-        "",
-        "21",
-        "",
-        "23",
-        "",
-        "25",
-        "",
-        "27",
-        "",
-        "29",
-        "",
-    ],
-    datasets: [
-        {
-            data: [
-                350, 320, 320, 400, 390, 330, 4500, 4450, 4450, 4000, 3900, 3900, 3900, 3700, 3500, 3450, 3450, 3100, 3000, 2980, 2950, 2750, 2500, 2400, 2000,
-                1900, 1900, 1750, 1700, 1700, 1650,
-            ],
-        },
-    ],
-};
-
 const chartConfig = {
     backgroundColor: "#e26a00",
     backgroundGradientFrom: "#fb8c00",
@@ -74,6 +31,7 @@ export default function BudgetScreen() {
     const { transactions, monthData, loadTransactions } = useTransactions();
     const [fromZero, setFromZero] = useState<boolean>(true);
     const [date, setDate] = useState<Date>(new Date());
+    const [chartData, setChartData] = useState<any>();
     const swiped = useRef(new Animated.Value(0)).current;
 
     const panResponder = useRef(
@@ -133,8 +91,41 @@ export default function BudgetScreen() {
         }, 50);
     }, [transactions]);
 
+    useEffect(() => {
+        updateChart();
+    }, [transactions, monthData]);
+
     const changeChart = () => {
         setFromZero(!fromZero);
+    };
+
+    const updateChart = () => {
+        if (transactions && monthData) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+
+            const labels = Array.from({ length: lastDayOfMonth }, (_, i) => (i + 1).toString().padStart(2, "0"));
+
+            let currentBalance = monthData.balance;
+
+            const dataset = labels.map((label) => {
+                const dateKey = `${year}-${(month + 1).toString().padStart(2, "0")}-${label}`;
+                const transactionsForDay = transactions[dateKey] || [];
+                transactionsForDay.forEach((t) => (currentBalance += t.cost));
+                return currentBalance;
+            });
+
+            const data = {
+                labels,
+                datasets: [
+                    {
+                        data: dataset,
+                    },
+                ],
+            };
+            setChartData(data);
+        }
     };
 
     const displayDate = (stringDate: string | Date, header: boolean = false) => {
@@ -160,16 +151,20 @@ export default function BudgetScreen() {
                     </Text>
                     <TouchableWithoutFeedback onPress={changeChart}>
                         <View>
-                            <LineChart
-                                data={chartData}
-                                verticalLabelRotation={-70}
-                                width={window.width * 0.94}
-                                height={220}
-                                chartConfig={chartConfig}
-                                yAxisSuffix="zł"
-                                fromZero={fromZero}
-                                style={styles.chart}
-                            />
+                            {chartData ? (
+                                <LineChart
+                                    data={chartData}
+                                    verticalLabelRotation={-70}
+                                    width={window.width * 0.94}
+                                    height={220}
+                                    chartConfig={chartConfig}
+                                    yAxisSuffix="zł"
+                                    fromZero={fromZero}
+                                    style={styles.chart}
+                                />
+                            ) : (
+                                <></>
+                            )}
                         </View>
                     </TouchableWithoutFeedback>
                     <View style={styles.margin}>
