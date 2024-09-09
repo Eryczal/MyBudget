@@ -85,7 +85,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         const date = `${year}-${month}-01`;
 
         const loadedTransactions: unknown[] = await database.getAllAsync(
-            "SELECT * FROM transactions WHERE date BETWEEN strftime('%Y-%m-01', ?) AND strftime('%Y-%m-%d', ?, 'start of month', '+1 month', '-1 day')",
+            "SELECT * FROM transactions WHERE date BETWEEN strftime('%Y-%m-01', ?) AND strftime('%Y-%m-%d', ?, 'start of month', '+1 month', '-1 day') ORDER BY date DESC",
             date,
             date
         );
