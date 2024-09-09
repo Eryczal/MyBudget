@@ -1,30 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import * as SQLite from "expo-sqlite";
-
-interface TransactionContextProps {
-    transactions: TransactionList | null;
-    monthData: MonthData | null;
-    addTransaction: (transaction: Transaction) => void;
-    loadTransactions: (date: Date) => void;
-}
-
-type TransactionList = {
-    [key: string]: Transaction[];
-};
-
-type Transaction = {
-    id?: number;
-    date: string;
-    name: string;
-    cost: number;
-    desc?: string;
-};
-
-type MonthData = {
-    id?: number;
-    date: string;
-    balance: number;
-};
+import { MonthData, Transaction, TransactionContextProps, TransactionList } from "@/app/types";
 
 const TransactionContext = createContext<TransactionContextProps | null>(null);
 
