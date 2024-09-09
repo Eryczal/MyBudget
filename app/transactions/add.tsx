@@ -75,7 +75,7 @@ export default function AddScreen() {
 
                 addTransaction(transaction);
 
-                router.push("/(tabs)/budget");
+                router.push("../(tabs)/budget");
             }
         }
     };

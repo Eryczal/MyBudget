@@ -138,6 +138,10 @@ export default function BudgetScreen() {
         });
     };
 
+    const showTransaction = (id: number) => {
+        router.push(`../transactions/${id}`);
+    };
+
     if (!transactions) {
         return <></>;
     }
@@ -179,7 +183,7 @@ export default function BudgetScreen() {
                                         {displayDate(date)}
                                     </Text>
                                     {transactions[date].map((transaction: any) => (
-                                        <Card key={transaction.id} mode="elevated" style={styles.payment}>
+                                        <Card key={transaction.id} mode="elevated" style={styles.payment} onPress={() => showTransaction(transaction.id)}>
                                             <View style={styles.paymentContainer}>
                                                 <View style={styles.paymentView}>
                                                     <Icon source="piggy-bank-outline" size={26} />
@@ -199,7 +203,7 @@ export default function BudgetScreen() {
                     </View>
                 </ScrollView>
             </Animated.View>
-            <FAB icon="plus" style={styles.fab} color="#fff" onPress={() => router.push("/add")} />
+            <FAB icon="plus" style={styles.fab} color="#fff" onPress={() => router.push("../transactions/add")} />
         </View>
     );
 }

@@ -53,7 +53,8 @@ function RootLayoutNav() {
             <TransactionProvider>
                 <Stack>
                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    <Stack.Screen name="add" options={{ headerShown: true, title: "Dodaj" }} />
+                    <Stack.Screen name="transactions/add" options={{ headerShown: true, title: "Dodaj" }} />
+                    <Stack.Screen name="transactions/[id]" options={{ headerShown: true, title: "Transakcja" }} />
                 </Stack>
             </TransactionProvider>
         </PaperProvider>
