@@ -121,6 +121,20 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         databaseAdd(transaction);
     };
 
+    const getTransaction = async (id: number): Promise<Transaction | null> => {
+        if (!db) {
+            return null;
+        }
+
+        const transaction: unknown[] = await db.getAllAsync("SELECT * FROM transactions WHERE id = ?", id);
+
+        if (!transaction) {
+            return null;
+        }
+
+        return transaction[0] as Transaction;
+    };
+
     const databaseClear = () => {
         if (db) {
             db.execAsync(`
@@ -138,6 +152,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         monthData,
         addTransaction,
         loadTransactions,
+        getTransaction,
     };
 
     return <TransactionContext.Provider value={value}>{children}</TransactionContext.Provider>;

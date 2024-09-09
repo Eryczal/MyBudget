@@ -3,6 +3,7 @@ export interface TransactionContextProps {
     monthData: MonthData | null;
     addTransaction: (transaction: Transaction) => void;
     loadTransactions: (date: Date) => void;
+    getTransaction: (id: number) => Promise<Transaction | null>;
 }
 
 export type TransactionList = {
