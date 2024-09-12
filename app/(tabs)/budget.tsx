@@ -53,6 +53,7 @@ export default function BudgetScreen() {
                     Animated.spring(swiped, {
                         toValue: window.width * direction * -1,
                         useNativeDriver: true,
+                        speed: 36,
                     }).start();
 
                     setTimeout(() => {
@@ -83,12 +84,15 @@ export default function BudgetScreen() {
     }, [date]);
 
     useEffect(() => {
-        setTimeout(() => {
-            Animated.spring(swiped, {
-                toValue: 0,
-                useNativeDriver: true,
-            }).start();
-        }, 50);
+        if (parseInt(JSON.stringify(swiped)) !== 0) {
+            setTimeout(() => {
+                Animated.spring(swiped, {
+                    toValue: 0,
+                    useNativeDriver: true,
+                    speed: 24,
+                }).start();
+            }, 50);
+        }
     }, [transactions]);
 
     useEffect(() => {
