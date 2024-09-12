@@ -62,7 +62,7 @@ export default function AddScreen() {
     };
 
     const submitTransaction = () => {
-        const regex = /^[0-9.,]+$/;
+        const regex = /^-?[0-9.,]+$/;
 
         if (cost.length >= 1 && name.length >= 3) {
             if (regex.test(cost)) {
