@@ -51,19 +51,19 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         await db.withTransactionAsync(async () => {
             await db.runAsync("INSERT INTO transactions (date, name, cost, desc) VALUES (?, ?, ?, ?)", date, name, cost, desc ?? "");
 
-            const result: any = await db.getFirstAsync("SELECT balance FROM months WHERE date = ?", monthDate);
+            const result: { balance: number } | null = await db.getFirstAsync("SELECT balance FROM months WHERE date = ?", monthDate);
 
             if (result === null) {
-                const previousResult: any = await db.getFirstAsync("SELECT * FROM months WHERE date < ? ORDER BY date DESC");
+                const lastMonth: MonthData | null = await db.getFirstAsync("SELECT * FROM months WHERE date < ? ORDER BY date DESC", monthDate);
 
-                if (previousResult !== null) {
-                    const lastMonth = previousResult.rows[0];
-
-                    const sum: any = await db.getFirstAsync(
-                        "SELECT SUM(cost) as total FROM transactions WHERE date BETWEEN strftime('%Y-%m-01', ?) AND strftime('%Y-%m-%d', ?, 'start of month', '+1 month', '-1 day')"
+                if (lastMonth !== null) {
+                    const sum: { total: number } | null = await db.getFirstAsync(
+                        "SELECT SUM(cost) as total FROM transactions WHERE date BETWEEN strftime('%Y-%m-01', ?) AND strftime('%Y-%m-%d', ?, 'start of month', '+1 month', '-1 day')",
+                        date,
+                        date
                     );
 
-                    await db.runAsync("INSERT INTO months (date, balance) VALUES (?, ?)", monthDate, lastMonth["balance"] + sum.rows[0]["total"]);
+                    await db.runAsync("INSERT INTO months (date, balance) VALUES (?, ?)", monthDate, lastMonth["balance"] + (sum?.total ?? 0));
                 } else {
                     await db.runAsync("INSERT INTO months (date, balance) VALUES (?, 0)", monthDate);
                 }
@@ -84,13 +84,11 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
         const date = `${year}-${month}-01`;
 
-        const loadedTransactions: unknown[] = await database.getAllAsync(
+        const dbTransactions: Transaction[] = await database.getAllAsync(
             "SELECT * FROM transactions WHERE date BETWEEN strftime('%Y-%m-01', ?) AND strftime('%Y-%m-%d', ?, 'start of month', '+1 month', '-1 day') ORDER BY date DESC",
             date,
             date
         );
-
-        const dbTransactions: Transaction[] = loadedTransactions as Transaction[];
 
         const groupedTransactions = dbTransactions.reduce((groups: TransactionList, transaction) => {
             const transactionDate = transaction.date;
@@ -101,7 +99,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
             return groups;
         }, {});
 
-        const loadedMonth: any = await database.getAllAsync("SELECT * FROM months WHERE date = ?", `${year}-${month}`);
+        const loadedMonth: MonthData[] = await database.getAllAsync("SELECT * FROM months WHERE date = ?", `${year}-${month}`);
         const monthValue = loadedMonth[0] ? loadedMonth[0] : { date: "${year}-${month}", balance: 0 };
 
         setTransactions(groupedTransactions);
@@ -126,7 +124,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
             return null;
         }
 
-        const transaction: unknown[] = await db.getAllAsync("SELECT * FROM transactions WHERE id = ?", id);
+        const transaction: Transaction[] = await db.getAllAsync("SELECT * FROM transactions WHERE id = ?", id);
 
         if (!transaction) {
             return null;
