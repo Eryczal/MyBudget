@@ -144,6 +144,8 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
             setTransactions(null);
             setMonthData(null);
+
+            console.log("Database cleared");
         }
     };
 
