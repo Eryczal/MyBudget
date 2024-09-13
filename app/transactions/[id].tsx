@@ -37,7 +37,32 @@ export default function TransactionScreen() {
 
     return (
         <View style={styles.container}>
-            <Text>{transaction.name}</Text>
+            <View style={styles.transaction}>
+                <View style={styles.details}>
+                    <Text variant="headlineSmall">Transakcja</Text>
+                    <Text variant="bodyLarge" style={styles.smallText}>
+                        {transaction.name}
+                    </Text>
+                </View>
+                <View style={styles.details}>
+                    <Text variant="headlineSmall">Kwota</Text>
+                    <Text variant="bodyLarge" style={styles.smallText}>
+                        {transaction.cost}zł
+                    </Text>
+                </View>
+                <View style={styles.details}>
+                    <Text variant="headlineSmall">Data</Text>
+                    <Text variant="bodyLarge" style={styles.smallText}>
+                        {transaction.date}
+                    </Text>
+                </View>
+                <View style={[styles.details, styles.noBorder]}>
+                    <Text variant="headlineSmall">Opis</Text>
+                    <Text variant="bodyLarge" style={styles.smallText}>
+                        {transaction.desc || "Brak"}
+                    </Text>
+                </View>
+            </View>
         </View>
     );
 }
@@ -47,17 +72,27 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#fafafa",
     },
-    title: {
-        fontSize: 20,
-        fontWeight: "bold",
+    transaction: {
+        marginTop: 20,
     },
-    input: {
-        marginTop: 12,
-        width: window.width * 0.9,
+    details: {
+        alignSelf: "center",
+        width: window.width * 0.5,
+        paddingVertical: 12,
+        marginBottom: 6,
+        borderBottomWidth: 1,
+        borderBlockColor: "#dadada",
+        alignItems: "center",
+    },
+    noBorder: {
+        borderBottomWidth: 0,
+    },
+    bigText: {
         alignSelf: "center",
     },
-    button: {
-        marginTop: 18,
-        padding: 6,
+    smallText: {
+        marginTop: 6,
+        color: "#555",
+        fontSize: 18,
     },
 });
